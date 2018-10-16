@@ -1,0 +1,72 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+    <style>
+        #custom-handle {
+            width: 3em;
+            height: 1.6em;
+            top: 50%;
+            margin-top: -.8em;
+            text-align: center;
+            line-height: 1.6em;
+        }
+        #content{
+            width: 100%;
+            height: calc(100% - 1.6em - 2px);
+            text-align: center;
+            display:table;
+        }
+        body{
+            height: 98vh;
+            margin: 0;
+        }
+        #slider{
+            margin: 10px;
+        }
+        h1{
+            margin:0;
+            padding:0;
+            vertical-align:middle;
+            display:table-cell;
+            font-size: 10em;
+        }
+    </style>
+  
+  <script>
+  $( function() {
+    let handle = $( "#custom-handle" );
+    $("#slider").slider({
+      create: function() {
+        handle.text( $( this ).slider( "value" ) );
+      },
+      slide: function( event, ui ) {
+        handle.text( ui.value );
+      }
+    });
+
+    (function update(){
+        $.get('/api/random', (data)=>{
+            $("#slider").slider('value', data);
+            handle.text(data);
+            $('h1').text(data);
+            setTimeout(update, 2000);
+        })
+    })()
+
+  });
+  </script>
+</head>
+<body>
+    <div id="slider">
+        <div id="custom-handle" class="ui-slider-handle"></div>
+    </div>
+    <div id="content">
+        <h1>66</h1>
+    </div>
+</body>
+</html>

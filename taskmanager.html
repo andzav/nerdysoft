@@ -1,0 +1,253 @@
+<head>
+    <script src="/socket.io/socket.io.js"></script>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+    <style>
+        #tasks > div {
+            padding: 10px;
+        }
+        i {
+            color: lightseagreen;
+            margin: 10px 5px 15px 5px;
+            text-align: justify;
+            vertical-align: middle;
+        }
+        i:hover {
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body class="container mt-5">
+    <div class="col-6 m-auto" id="loginForm">
+        <form>
+            <div class="form-group">
+                <label for="login">Login</label>
+                <input type="text" class="form-control" id="login" placeholder="Enter login">
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" class="form-control" id="password" placeholder="Password">
+            </div>
+            <button type="submit" id="loginBtn" class="btn btn-primary btn-block">Login / Register</button>
+        </form>
+    </div>
+    <div class="col-9 m-auto" id="tasks">
+            <button class="btn btn-primary mb-2 mt-2 btn-block" id="addNewTask">Add new task</button>
+            <div id="tasksList"></div>
+    </div>
+
+    <div class="modal fade" id="createModal" tabindex="-1" role="dialog" aria-labelledby="createModalTile" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="createModalLongTitle">Create task</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="form-group">
+                        <label for="task-caption" class="col-form-label">Task caption:</label>
+                        <input type="text" class="form-control" id="create-task-caption">
+                    </div>
+                    <div class="form-group">
+                        <label for="task-text" class="col-form-label">Task text:</label>
+                        <textarea class="form-control" id="create-task-text"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="createTask">Create task</button>
+            </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="shareModal" tabindex="-1" role="dialog" aria-labelledby="shareModalTile" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="shareModalLongTitle">Share task</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <input id="share-task-id" hidden disabled>
+                    <div class="form-group">
+                        <label for="share-email" class="col-form-label">User email:</label>
+                        <input type="text" class="form-control" id="share-email">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="shareTask">Share</button>
+            </div>
+            </div>
+        </div>
+    </div>
+      
+    <div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="editModalTile" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editModalLongTitle">Edit task</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <input id="task-id" hidden disabled>
+                    <div class="form-group">
+                        <label for="task-caption" class="col-form-label">Task caption:</label>
+                        <input type="text" class="form-control" id="task-caption">
+                    </div>
+                    <div class="form-group">
+                        <label for="task-text" class="col-form-label">Task text:</label>
+                        <textarea class="form-control" id="task-text"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="editTask">Save changes</button>
+            </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+<script>
+
+    function escapeOutput(toOutput){
+        return toOutput.replace(/\&/g, '&amp;')
+            .replace(/\</g, '&lt;')
+            .replace(/\>/g, '&gt;')
+            .replace(/\"/g, '&quot;')
+            .replace(/\'/g, '&#x27')
+            .replace(/\//g, '&#x2F');
+    }
+
+    let socket = io();
+    socket.on('updatetasks', function(msg){
+        if (msg === localStorage.getItem('id')){
+            loadTasks();
+        }
+    });
+
+    let tasks = [];
+
+    function loadTasks(){
+        $.get("/api/tasks?token="+localStorage.getItem('token'), function(data){
+            $('#tasksList').html('');
+            tasks = data;
+            for (let k in data){
+                let text = data[k].invitedBy !== undefined ? "Shared by: " + escapeOutput(data[k].invitedBy) : ""
+                $('#tasksList').append('<div class="task"><h1>'+escapeOutput(data[k].title)+'</h1><i class="material-icons" data="'+data[k]._id+'">share</i><i class="material-icons" data="'+data[k]._id+'">edit</i><i class="material-icons" data="'+data[k]._id+'">delete</i><i>'+text+'</i><h5>'+escapeOutput(data[k].content)+'</h5></div>');
+            }
+        });
+    }
+
+    $( document ).on( "click", "i.material-icons", function(e) {
+        if (e.target.textContent === "delete"){
+            $.ajax("/api/tasks", {
+                data : JSON.stringify({"token": localStorage.getItem("token"), "id": e.target.attributes[1].value}),
+                contentType : 'application/json',
+                type : 'DELETE',
+                success: function(data){
+                    if (!data.success) alert("Error occured");
+                    loadTasks();
+                }
+            });
+        }else if (e.target.textContent === "edit"){
+            let task = tasks.find(el => el._id === e.target.attributes[1].value);
+            $("#task-id").val(task._id);
+            $("#task-caption").val(task.title);
+            $("#task-text").val(task.content);
+            $('#editModal').modal();
+        }else if (e.target.textContent === "share"){
+            let task = tasks.find(el => el._id === e.target.attributes[1].value);
+            $("#share-task-id").val(task._id);
+            $('#shareModal').modal();
+        }
+    });
+    
+    $("#addNewTask").click( () => {
+        $('#createModal').modal();
+    });
+
+    $("#editTask").click( () => {
+        $.ajax("/api/tasks", {
+            data : JSON.stringify({"token": localStorage.getItem("token"), "id": $("#task-id").val(), "title": $("#task-caption").val(), "content": $("#task-text").val()}),
+            contentType : 'application/json',
+            type : 'PUT',
+            success: function(data){
+                if (!data.success) alert("Error occured");
+                loadTasks();
+            }
+        });
+        $('#editModal').modal('hide');
+    })
+
+    $("#createTask").click( () => {
+        $.ajax("/api/tasks", {
+			data : JSON.stringify({"token": localStorage.getItem("token"), "title": $("#create-task-caption").val(), "content": $("#create-task-text").val()}),
+			contentType : 'application/json',
+			type : 'POST',
+			success: function(data){
+				if (!data.success) alert("Error occured");
+                loadTasks();
+			}
+        });
+        $('#createModal').modal('hide');
+    })
+
+    $("#shareTask").click( () => {
+        $.ajax("/api/share", {
+			data : JSON.stringify({"token": localStorage.getItem("token"), "id": $("#share-task-id").val(), "email": $("#share-email").val()}),
+			contentType : 'application/json',
+			type : 'POST',
+			success: function(data){
+				if (!data.success) alert("Error occured");
+                loadTasks();
+			}
+        });
+        $('#shareModal').modal('hide');
+    });
+
+
+    $("#loginBtn").click( (e) => {
+		let login = $("#login").val()
+		let password = $("#password").val();
+		$.post("/api/login", {"email": login, "password": password}, function(data){
+			if (data.token){
+                localStorage.setItem('token', data.token);
+                localStorage.setItem('id', data.id);
+				$("#loginForm").css("display","none");
+				loadTasks();
+				$("#tasks").css("display","block");
+			}else{
+				alert("Error occured");
+			}
+		});
+		e.preventDefault();
+    });
+    
+    if (localStorage.getItem('token')){
+		$("#loginForm").css("display","none");
+        loadTasks();
+        $("#tasks").css("display","block");
+	}else{
+		$("#loginForm").css("display","block");
+		$("#tasks").css("display","none");
+	}
+</script>
